@@ -59,6 +59,9 @@ data-platform:
         "[spring.deserializer.value.delegate.class]": org.springframework.kafka.support.serializer.JsonDeserializer
         "[isolation.level]": read_committed
         "[enable.auto.commit]": false
+    topic-properties:
+      creation:
+        enabled: true
     topics:
       bpm-history-process: bpm-history-process
       bpm-history-task: bpm-history-task

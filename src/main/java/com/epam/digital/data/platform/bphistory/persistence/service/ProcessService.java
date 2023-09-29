@@ -18,9 +18,10 @@ package com.epam.digital.data.platform.bphistory.persistence.service;
 
 import com.epam.digital.data.platform.bphistory.model.HistoryProcess;
 import com.epam.digital.data.platform.bphistory.persistence.audit.AuditableService;
-import com.epam.digital.data.platform.bphistory.persistence.exception.NotFoundException;
 import com.epam.digital.data.platform.bphistory.persistence.mapper.HistoryProcessMapper;
 import com.epam.digital.data.platform.bphistory.persistence.repository.HistoryProcessRepository;
+import com.epam.digital.data.platform.bphistory.persistence.repository.entity.BpmHistoryProcess;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +36,8 @@ public class ProcessService {
   private final HistoryProcessRepository repository;
   private final HistoryProcessMapper mapper;
 
-  public boolean isExist(String id) {
-    return repository.existsById(id);
+  public Optional<BpmHistoryProcess> getById(String id) {
+    return repository.findById(id);
   }
 
   @AuditableService(value = AuditableService.Operation.PROCESS_CREATED)
@@ -46,13 +47,10 @@ public class ProcessService {
   }
 
   @AuditableService(value = AuditableService.Operation.PROCESS_UPDATED)
-  public void update(HistoryProcess event) {
+  public void update(HistoryProcess event, BpmHistoryProcess existing) {
     log.info("Process with id {} already exists, updating fields", event.getProcessInstanceId());
 
-    var existing = repository.findById(event.getProcessInstanceId())
-        .orElseThrow(() -> new NotFoundException("No process found"));
     var updatedEvent = mapper.updateEntity(event, existing);
-
     repository.save(updatedEvent);
   }
 }

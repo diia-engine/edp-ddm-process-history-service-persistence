@@ -25,7 +25,6 @@ import com.epam.digital.data.platform.bphistory.model.HistoryProcess;
 import com.epam.digital.data.platform.bphistory.persistence.config.TestBeansConfig;
 import com.epam.digital.data.platform.bphistory.persistence.repository.HistoryProcessRepository;
 import com.epam.digital.data.platform.bphistory.persistence.repository.entity.BpmHistoryProcess;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -62,9 +61,8 @@ public class ProcessServiceTest {
   @Test
   void shouldUpdateNewFieldsAndNotModifyUnchanged() {
     when(repository.existsById(ENTITY_ID)).thenReturn(true);
-    when(repository.findById(ENTITY_ID)).thenReturn(Optional.of(old()));
 
-    instance.update(received());
+    instance.update(received(), old());
 
     verify(repository).save(captor.capture());
 

@@ -44,11 +44,13 @@ public class HistoryProcessListener {
       log.info(
           "Save Process with id: {}",
           input.getProcessInstanceId());
-      if(processService.isExist(input.getProcessInstanceId())) {
-        processService.update(input);
-      } else {
+      var optionalExisting = processService.getById(input.getProcessInstanceId());
+      if (optionalExisting.isEmpty()) {
         processService.create(input);
+      } else {
+        processService.update(input, optionalExisting.get());
       }
+      log.info("Process created/updated with id: {}", input.getProcessInstanceId());
     }
   }
 }

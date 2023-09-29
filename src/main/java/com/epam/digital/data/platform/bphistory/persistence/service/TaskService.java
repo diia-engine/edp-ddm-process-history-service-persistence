@@ -18,9 +18,10 @@ package com.epam.digital.data.platform.bphistory.persistence.service;
 
 import com.epam.digital.data.platform.bphistory.model.HistoryTask;
 import com.epam.digital.data.platform.bphistory.persistence.audit.AuditableService;
-import com.epam.digital.data.platform.bphistory.persistence.exception.NotFoundException;
 import com.epam.digital.data.platform.bphistory.persistence.mapper.HistoryTaskMapper;
 import com.epam.digital.data.platform.bphistory.persistence.repository.HistoryTaskRepository;
+import com.epam.digital.data.platform.bphistory.persistence.repository.entity.BpmHistoryTask;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +36,8 @@ public class TaskService {
   private final HistoryTaskRepository repository;
   private final HistoryTaskMapper mapper;
 
-  public boolean isExist(String id) {
-    return repository.existsById(id);
+  public Optional<BpmHistoryTask> getById(String id) {
+    return repository.findById(id);
   }
 
   @AuditableService(AuditableService.Operation.TASK_CREATED)
@@ -47,11 +48,9 @@ public class TaskService {
   }
 
   @AuditableService(AuditableService.Operation.TASK_UPDATED)
-  public void update(HistoryTask event) {
+  public void update(HistoryTask event, BpmHistoryTask existing) {
     log.info("Task with id {} already exists, updating fields", event.getActivityInstanceId());
 
-    var existing = repository.findById(event.getActivityInstanceId())
-        .orElseThrow(() -> new NotFoundException("No task found"));
     var updatedEvent = mapper.updateEntity(event, existing);
 
     repository.save(updatedEvent);

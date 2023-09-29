@@ -44,11 +44,13 @@ public class HistoryTaskListener {
       log.info(
           "Save Task with id: {}",
           input.getActivityInstanceId());
-      if(taskService.isExist(input.getActivityInstanceId())) {
-        taskService.update(input);
-      } else {
+      var optionalExisting = taskService.getById(input.getActivityInstanceId());
+      if (optionalExisting.isEmpty()) {
         taskService.create(input);
+      } else {
+        taskService.update(input, optionalExisting.get());
       }
+      log.info("Task created/updated with id: {}", input.getActivityInstanceId());
     }
   }
 }

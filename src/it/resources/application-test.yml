@@ -12,6 +12,11 @@ spring:
 data-platform:
   kafka:
     bootstrap: localhost:9092
+    topic-properties:
+      creation:
+        enabled: false
+        num-partitions: 1
+        replication-factor: 1
     ssl:
       enabled: false
 
