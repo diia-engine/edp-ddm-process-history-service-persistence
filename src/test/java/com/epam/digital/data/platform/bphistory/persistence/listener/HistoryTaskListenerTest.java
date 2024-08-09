@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,6 @@ public class HistoryTaskListenerTest {
 
     listener.save(input);
 
-    verify(service).save(input);
+    verify(service).create(input);
   }
 }

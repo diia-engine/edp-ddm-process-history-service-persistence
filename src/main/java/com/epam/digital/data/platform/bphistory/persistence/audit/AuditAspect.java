@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,10 +32,10 @@ public class AuditAspect {
     this.kafkaAuditProcessor = kafkaAuditProcessor;
   }
 
-  @Around("@annotation(com.epam.digital.data.platform.bphistory.persistence.audit.AuditableListener) && args(request)")
+  @Around("@annotation(com.epam.digital.data.platform.bphistory.persistence.audit.AuditableService) && args(request)")
   Object kafkaAdvice(ProceedingJoinPoint joinPoint, Object request) throws Throwable {
     var signature = (MethodSignature) joinPoint.getSignature();
-    var operation = signature.getMethod().getAnnotation(AuditableListener.class).value();
+    var operation = signature.getMethod().getAnnotation(AuditableService.class).value();
     return kafkaAuditProcessor.process(joinPoint, operation);
   }
 }

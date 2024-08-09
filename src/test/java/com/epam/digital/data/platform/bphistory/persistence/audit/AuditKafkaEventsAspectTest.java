@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,15 @@ package com.epam.digital.data.platform.bphistory.persistence.audit;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.epam.digital.data.platform.bphistory.model.HistoryTask;
-import com.epam.digital.data.platform.bphistory.persistence.listener.HistoryTaskListener;
+import com.epam.digital.data.platform.bphistory.persistence.mapper.HistoryTaskMapper;
+import com.epam.digital.data.platform.bphistory.persistence.repository.HistoryTaskRepository;
+import com.epam.digital.data.platform.bphistory.persistence.repository.entity.BpmHistoryTask;
 import com.epam.digital.data.platform.bphistory.persistence.service.TaskService;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,21 +39,24 @@ import org.springframework.context.annotation.Import;
     classes = {
         AuditAspect.class,
         KafkaAuditProcessor.class,
-        HistoryTaskListener.class,
+        TaskService.class
     })
-@MockBean(TaskService.class)
 class AuditKafkaEventsAspectTest {
 
   @Autowired
-  private HistoryTaskListener taskListener;
-
+  private TaskService taskService;
+  @MockBean
+  private HistoryTaskRepository repository;
+  @MockBean
+  private HistoryTaskMapper mapper;
   @MockBean
   private KafkaEventsFacade kafkaEventsFacade;
 
   @Test
   void expectAuditAspectBeforeAndAfterUpdateMethodWhenNoException() {
-
-    taskListener.save(new HistoryTask());
+    when(repository.existsById(any())).thenReturn(false);
+    when(mapper.toEntity(any())).thenReturn(Mockito.mock(BpmHistoryTask.class));
+    taskService.create(new HistoryTask());
 
     verify(kafkaEventsFacade, times(2)).sendKafkaAudit(any(), any(), any(), any(), any());
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.epam.digital.data.platform.bphistory.persistence.service;
 
 import com.epam.digital.data.platform.bphistory.model.HistoryProcess;
+import com.epam.digital.data.platform.bphistory.persistence.audit.AuditableService;
 import com.epam.digital.data.platform.bphistory.persistence.exception.NotFoundException;
 import com.epam.digital.data.platform.bphistory.persistence.mapper.HistoryProcessMapper;
 import com.epam.digital.data.platform.bphistory.persistence.repository.HistoryProcessRepository;
@@ -34,19 +35,24 @@ public class ProcessService {
   private final HistoryProcessRepository repository;
   private final HistoryProcessMapper mapper;
 
-  public void save(HistoryProcess event) {
-    if (repository.existsById(event.getProcessInstanceId())) {
-      log.info("Process with id {} already exists, updating fields", event.getProcessInstanceId());
+  public boolean isExist(String id) {
+    return repository.existsById(id);
+  }
 
-      var existing = repository.findById(event.getProcessInstanceId())
-          .orElseThrow(() -> new NotFoundException("No process found"));
-      var updatedEvent = mapper.updateEntity(event, existing);
+  @AuditableService(value = AuditableService.Operation.PROCESS_CREATED)
+  public void create(HistoryProcess event) {
+    log.info("Saving new process with id {}", event.getProcessInstanceId());
+    repository.save(mapper.toEntity(event));
+  }
 
-      repository.save(updatedEvent);
-    } else {
-      log.info("Saving new process with id {}", event.getProcessInstanceId());
+  @AuditableService(value = AuditableService.Operation.PROCESS_UPDATED)
+  public void update(HistoryProcess event) {
+    log.info("Process with id {} already exists, updating fields", event.getProcessInstanceId());
 
-      repository.save(mapper.toEntity(event));
-    }
+    var existing = repository.findById(event.getProcessInstanceId())
+        .orElseThrow(() -> new NotFoundException("No process found"));
+    var updatedEvent = mapper.updateEntity(event, existing);
+
+    repository.save(updatedEvent);
   }
 }

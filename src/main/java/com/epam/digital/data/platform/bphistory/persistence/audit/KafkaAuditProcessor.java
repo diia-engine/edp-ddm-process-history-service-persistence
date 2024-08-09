@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package com.epam.digital.data.platform.bphistory.persistence.audit;
 
-import com.epam.digital.data.platform.bphistory.persistence.audit.AuditableListener.Operation;
+import com.epam.digital.data.platform.bphistory.persistence.audit.AuditableService.Operation;
 import com.epam.digital.data.platform.starter.audit.model.EventType;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.stereotype.Component;
@@ -24,7 +24,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class KafkaAuditProcessor {
 
-  private String OPERATION = "KAFKA REQUEST UPDATE";
   private String STATUS = "SUCCESS";
 
   static final String BEFORE = "BEFORE";
@@ -46,12 +45,12 @@ public class KafkaAuditProcessor {
     String methodName = joinPoint.getSignature().getName();
 
     kafkaEventsFacade.sendKafkaAudit(
-        EventType.USER_ACTION, methodName, OPERATION, BEFORE, null);
+        EventType.USER_ACTION, methodName, operation.name(), BEFORE, null);
 
     Object result = joinPoint.proceed();
 
     kafkaEventsFacade.sendKafkaAudit(
-        EventType.USER_ACTION, methodName, OPERATION, AFTER, STATUS);
+        EventType.USER_ACTION, methodName, operation.name(), AFTER, STATUS);
     return result;
   }
 }

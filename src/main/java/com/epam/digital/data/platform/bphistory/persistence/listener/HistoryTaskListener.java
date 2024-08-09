@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
 package com.epam.digital.data.platform.bphistory.persistence.listener;
 
 import com.epam.digital.data.platform.bphistory.model.HistoryTask;
-import com.epam.digital.data.platform.bphistory.persistence.audit.AuditableListener;
-import com.epam.digital.data.platform.bphistory.persistence.audit.AuditableListener.Operation;
 import com.epam.digital.data.platform.bphistory.persistence.service.TaskService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +34,6 @@ public class HistoryTaskListener {
     this.taskService = taskService;
   }
 
-  @AuditableListener(Operation.UPDATE)
   @KafkaListener(
       topics = "\u0023{kafkaProperties.topics['bpm-history-task']}",
       groupId = "\u0023{kafkaProperties.consumer.groupId}",
@@ -47,7 +44,11 @@ public class HistoryTaskListener {
       log.info(
           "Save Task with id: {}",
           input.getActivityInstanceId());
-      taskService.save(input);
+      if(taskService.isExist(input.getActivityInstanceId())) {
+        taskService.update(input);
+      } else {
+        taskService.create(input);
+      }
     }
   }
 }
