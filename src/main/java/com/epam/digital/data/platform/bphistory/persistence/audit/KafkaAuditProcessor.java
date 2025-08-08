@@ -16,13 +16,20 @@
 
 package com.epam.digital.data.platform.bphistory.persistence.audit;
 
+import com.epam.digital.data.platform.bphistory.model.HistoryProcess;
+import com.epam.digital.data.platform.bphistory.model.HistoryTask;
 import com.epam.digital.data.platform.bphistory.persistence.audit.AuditableService.Operation;
+import com.epam.digital.data.platform.bphistory.persistence.audit.util.AuditSourceUtils;
+import com.epam.digital.data.platform.bphistory.persistence.util.Header;
+import com.epam.digital.data.platform.starter.audit.model.AuditSourceInfo;
 import com.epam.digital.data.platform.starter.audit.model.EventType;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Component;
 
 @Component
-public class KafkaAuditProcessor {
+public class KafkaAuditProcessor implements AuditProcessor<Operation> {
 
   private String STATUS = "SUCCESS";
 
@@ -41,16 +48,40 @@ public class KafkaAuditProcessor {
 
   private Object prepareAndSendKafkaAudit(ProceedingJoinPoint joinPoint, Operation operation)
       throws Throwable {
+    Message<?> message = getArgumentByType(joinPoint, GenericMessage.class);
+    Object payload = message.getPayload();
+    String token = AuditSourceUtils.getFromHeader(message, Header.X_ACCESS_TOKEN.getHeaderName());
+
+    var sourceInfo = new AuditSourceInfo();
+    AuditSourceUtils.fillFromHeaders(sourceInfo, message);
+
+    if (payload instanceof HistoryTask) {
+      AuditSourceUtils.fillFromTask(sourceInfo, (HistoryTask) payload);
+    } else if (payload instanceof HistoryProcess) {
+      AuditSourceUtils.fillFromProcess(sourceInfo, (HistoryProcess) payload);
+    }
 
     String methodName = joinPoint.getSignature().getName();
 
     kafkaEventsFacade.sendKafkaAudit(
-        EventType.USER_ACTION, methodName, operation.name(), BEFORE, null);
+        EventType.USER_ACTION,
+        methodName,
+        operation.name(),
+        token,
+        sourceInfo,
+        BEFORE,
+        null);
 
     Object result = joinPoint.proceed();
 
     kafkaEventsFacade.sendKafkaAudit(
-        EventType.USER_ACTION, methodName, operation.name(), AFTER, STATUS);
+        EventType.USER_ACTION,
+        methodName,
+        operation.name(),
+        token,
+        sourceInfo,
+        AFTER,
+        STATUS);
     return result;
   }
 }

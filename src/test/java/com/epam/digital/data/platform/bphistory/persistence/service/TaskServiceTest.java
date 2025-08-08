@@ -32,6 +32,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 
 @SpringBootTest(classes = TaskService.class)
 @Import(TestBeansConfig.class)
@@ -53,7 +55,9 @@ public class TaskServiceTest {
 
   @Test
   void shouldSaveIfNotExistsInDb() {
-    instance.create(new HistoryTask());
+    instance.create(MessageBuilder
+        .withPayload(new HistoryTask())
+        .build());
 
     verify(repository).save(any());
   }
@@ -79,12 +83,14 @@ public class TaskServiceTest {
     return process;
   }
 
-  private HistoryTask received() {
+  private Message<HistoryTask> received() {
     var process = new HistoryTask();
     process.setActivityInstanceId(ENTITY_ID);
     process.setAssignee(ASSIGNEE_NEW);
     process.setProcessDefinitionName(DEFINITION_NAME);
-    return process;
+    return MessageBuilder
+        .withPayload(process)
+        .build();
   }
 }
 

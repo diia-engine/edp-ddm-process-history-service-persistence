@@ -21,6 +21,7 @@ import com.epam.digital.data.platform.bphistory.persistence.service.TaskService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -38,17 +39,18 @@ public class HistoryTaskListener {
       topics = "\u0023{kafkaProperties.topics['bpm-history-task']}",
       groupId = "\u0023{kafkaProperties.consumer.groupId}",
       containerFactory = "concurrentKafkaListenerContainerFactory")
-  public void save(HistoryTask input) {
+  public void save(Message<HistoryTask> message) {
     log.info("Kafka event received");
+    HistoryTask input = message.getPayload();
     if (input != null) {
       log.info(
           "Save Task with id: {}",
           input.getActivityInstanceId());
       var optionalExisting = taskService.getById(input.getActivityInstanceId());
       if (optionalExisting.isEmpty()) {
-        taskService.create(input);
+        taskService.create(message);
       } else {
-        taskService.update(input, optionalExisting.get());
+        taskService.update(message, optionalExisting.get());
       }
       log.info("Task created/updated with id: {}", input.getActivityInstanceId());
     }

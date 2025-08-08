@@ -25,6 +25,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -41,13 +42,15 @@ public class ProcessService {
   }
 
   @AuditableService(value = AuditableService.Operation.PROCESS_CREATED)
-  public void create(HistoryProcess event) {
+  public void create(Message<HistoryProcess> message) {
+    HistoryProcess event = message.getPayload();
     log.info("Saving new process with id {}", event.getProcessInstanceId());
     repository.save(mapper.toEntity(event));
   }
 
   @AuditableService(value = AuditableService.Operation.PROCESS_UPDATED)
-  public void update(HistoryProcess event, BpmHistoryProcess existing) {
+  public void update(Message<HistoryProcess> message, BpmHistoryProcess existing) {
+    HistoryProcess event = message.getPayload();
     log.info("Process with id {} already exists, updating fields", event.getProcessInstanceId());
 
     var updatedEvent = mapper.updateEntity(event, existing);

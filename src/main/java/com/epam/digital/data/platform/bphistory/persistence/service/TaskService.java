@@ -25,6 +25,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -41,14 +42,15 @@ public class TaskService {
   }
 
   @AuditableService(AuditableService.Operation.TASK_CREATED)
-  public void create(HistoryTask event) {
+  public void create(Message<HistoryTask> message) {
+    HistoryTask event = message.getPayload();
     log.info("Saving new task with id {}", event.getActivityInstanceId());
-
     repository.save(mapper.toEntity(event));
   }
 
   @AuditableService(AuditableService.Operation.TASK_UPDATED)
-  public void update(HistoryTask event, BpmHistoryTask existing) {
+  public void update(Message<HistoryTask> message, BpmHistoryTask existing) {
+    HistoryTask event = message.getPayload();
     log.info("Task with id {} already exists, updating fields", event.getActivityInstanceId());
 
     var updatedEvent = mapper.updateEntity(event, existing);

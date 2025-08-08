@@ -21,6 +21,7 @@ import com.epam.digital.data.platform.bphistory.persistence.service.ProcessServi
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -38,17 +39,18 @@ public class HistoryProcessListener {
       topics = "\u0023{kafkaProperties.topics['bpm-history-process']}",
       groupId = "\u0023{kafkaProperties.consumer.groupId}",
       containerFactory = "concurrentKafkaListenerContainerFactory")
-  public void save(HistoryProcess input) {
+  public void save(Message<HistoryProcess> message) {
     log.info("Kafka event received");
+    HistoryProcess input = message.getPayload();
     if (input != null) {
       log.info(
           "Save Process with id: {}",
           input.getProcessInstanceId());
       var optionalExisting = processService.getById(input.getProcessInstanceId());
       if (optionalExisting.isEmpty()) {
-        processService.create(input);
+        processService.create(message);
       } else {
-        processService.update(input, optionalExisting.get());
+        processService.update(message, optionalExisting.get());
       }
       log.info("Process created/updated with id: {}", input.getProcessInstanceId());
     }

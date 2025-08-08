@@ -33,6 +33,7 @@ import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.messaging.support.MessageBuilder;
 
 @Import({AopAutoConfiguration.class})
 @SpringBootTest(
@@ -56,9 +57,13 @@ class AuditKafkaEventsAspectTest {
   void expectAuditAspectBeforeAndAfterUpdateMethodWhenNoException() {
     when(repository.existsById(any())).thenReturn(false);
     when(mapper.toEntity(any())).thenReturn(Mockito.mock(BpmHistoryTask.class));
-    taskService.create(new HistoryTask());
 
-    verify(kafkaEventsFacade, times(2)).sendKafkaAudit(any(), any(), any(), any(), any());
+    taskService.create(MessageBuilder
+        .withPayload(new HistoryTask())
+        .build());
+
+    verify(kafkaEventsFacade, times(2)).sendKafkaAudit(any(), any(), any(), any(), any(), any(),
+        any());
   }
 }
 

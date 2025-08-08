@@ -32,6 +32,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 
 @SpringBootTest(classes = ProcessService.class)
 @Import(TestBeansConfig.class)
@@ -53,7 +55,9 @@ public class ProcessServiceTest {
 
   @Test
   void shouldSaveIfNotExistsInDb() {
-    instance.create(new HistoryProcess());
+    instance.create(MessageBuilder
+        .withPayload(new HistoryProcess())
+        .build());
 
     verify(repository).save(any());
   }
@@ -79,11 +83,11 @@ public class ProcessServiceTest {
     return process;
   }
 
-  private HistoryProcess received() {
+  private Message<HistoryProcess> received() {
     var process = new HistoryProcess();
     process.setProcessInstanceId(ENTITY_ID);
     process.setBusinessKey(BUSINESS_KEY_NEW);
     process.setCompletionResult(COMPLETION_RESULT);
-    return process;
+    return MessageBuilder.withPayload(process).build();
   }
 }

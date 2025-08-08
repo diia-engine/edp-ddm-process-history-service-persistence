@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 
 @ExtendWith(MockitoExtension.class)
 public class HistoryTaskListenerTest {
@@ -41,10 +43,12 @@ public class HistoryTaskListenerTest {
 
   @Test
   void callService() {
-    var input = new HistoryTask();
+    Message<HistoryTask> message = MessageBuilder
+        .withPayload(new HistoryTask())
+        .build();
 
-    listener.save(input);
+    listener.save(message);
 
-    verify(service).create(input);
+    verify(service).create(message);
   }
 }
